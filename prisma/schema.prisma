@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  emailVerified DateTime?
+  name         String?
+  image        String?
+  credits      Float      @default(0)
+  referralCode String     @unique @default(cuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  sessions            Session[]
+  interviewSessions   InterviewSession[]
+  documents    Document[]
+  purchases    Purchase[]
+  referrals    Referral[] @relation("ReferrerRelation")
+  settings     Settings?
+  accounts     Account[]
+  magicTokens  MagicToken[]
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  meta      Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model MagicToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([email])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InterviewSession {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String?
+  language      String   @default("en")
+  jobRole       String?
+  industry      String?
+  interviewType String?
+  aiModel       String   @default("gpt-4o")
+  duration      Int      @default(0)
+  creditsUsed   Float    @default(0)
+  questionsAnswered Int  @default(0)
+  isFreeSession Boolean  @default(false)
+  lastCreditExtensionAt DateTime?
+  createdAt     DateTime @default(now())
+  endedAt       DateTime?
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Document {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  originalName  String
+  type          String
+  mimeType      String
+  size          Int
+  s3Key         String
+  extractedText String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float
+  credits   Float
+  plan      String
+  stripeId  String?  @unique
+  invoiceId String?
+  status    String   @default("completed")
+  currency  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  referrerId     String
+  referrer       User     @relation("ReferrerRelation", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredEmail  String
+  creditsAwarded Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([referrerId])
+  @@index([referredEmail])
+}
+
+model Settings {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultAudioSource    String  @default("microphone")
+  defaultTtsVoice       String  @default("default")
+  defaultTtsSpeed       Float   @default(1.0)
+  defaultAiModel        String  @default("gpt-4o")
+  defaultResponseLength String  @default("medium")
+  defaultLanguage       String  @default("en")
+  theme                 String  @default("dark")
+  emailNotifications    Boolean @default(true)
+  sessionSummaryEmail   Boolean @default(false)
+  customShortcuts       Json?
+}
