@@ -10,13 +10,15 @@ import {
   LogOut,
   Menu,
   X,
+  ClipboardList,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/customers", label: "Users", icon: Users },
+  { href: "/access-requests", label: "Access Requests", icon: ClipboardList, badge: true as const },
   { href: "/sessions", label: "Sessions", icon: CalendarClock },
   { href: "/purchases", label: "Revenue", icon: CreditCard },
 ];
@@ -24,6 +26,29 @@ const nav = [
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [pendingAccess, setPendingAccess] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/access-requests/pending-count");
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && typeof data.count === "number") {
+          setPendingAccess(data.count);
+        }
+      } catch {
+        if (!cancelled) setPendingAccess(null);
+      }
+    }
+    load();
+    const onRefresh = () => load();
+    window.addEventListener("whispr-admin-pending-refresh", onRefresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("whispr-admin-pending-refresh", onRefresh);
+    };
+  }, [pathname]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -47,8 +72,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
         <nav className="space-y-0.5 p-2">
-          {nav.map(({ href, label, icon: Icon }) => {
+          {nav.map((item) => {
+            const { href, label, icon: Icon } = item;
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            const showBadge =
+              "badge" in item &&
+              item.badge &&
+              pendingAccess !== null &&
+              pendingAccess > 0;
             return (
               <Link
                 key={href}
@@ -62,7 +93,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0 opacity-90" />
-                {label}
+                <span className="flex flex-1 items-center justify-between gap-2">
+                  {label}
+                  {showBadge ? (
+                    <span className="min-w-[1.25rem] rounded-full bg-red-600 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
+                      {pendingAccess > 99 ? "99+" : pendingAccess}
+                    </span>
+                  ) : null}
+                </span>
               </Link>
             );
           })}

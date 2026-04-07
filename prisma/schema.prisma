@@ -14,6 +14,11 @@ model User {
   name         String?
   image        String?
   credits      Float      @default(0)
+  status        String     @default("pending")
+  requestedAt   DateTime   @default(now())
+  approvedAt    DateTime?
+  approvedBy    String?
+  isAdmin       Boolean    @default(false)
   referralCode String     @unique @default(cuid())
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -26,6 +31,8 @@ model User {
   accounts     Account[]
   magicTokens  MagicToken[]
   auditLogs    AuditLog[]
+
+  @@index([status])
 }
 
 model AuditLog {
@@ -100,7 +107,7 @@ model InterviewSession {
   jobRole       String?
   industry      String?
   interviewType String?
-  aiModel       String   @default("gpt-4o")
+  aiModel       String   @default("llama-3.3-70b")
   duration      Int      @default(0)
   creditsUsed   Float    @default(0)
   questionsAnswered Int  @default(0)
