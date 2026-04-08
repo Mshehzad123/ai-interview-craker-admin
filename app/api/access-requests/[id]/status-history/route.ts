@@ -3,7 +3,7 @@ import { requireAdminCookie } from "@/lib/admin-api-auth";
 
 type Ctx = { params: { id: string } };
 
-export async function PATCH(_req: Request, context: Ctx) {
+export async function GET(_req: Request, context: Ctx) {
   if (!(await requireAdminCookie())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -25,8 +25,8 @@ export async function PATCH(_req: Request, context: Ctx) {
   const audit = process.env.WHISPR_ADMIN_AUDIT_EMAIL?.trim();
   if (audit) headers["X-Admin-Actor"] = audit;
 
-  const res = await fetch(`${base}/api/admin/users/${id}/reject`, {
-    method: "PATCH",
+  const res = await fetch(`${base}/api/admin/users/${id}/status-history`, {
+    method: "GET",
     headers,
   });
   const body = await res.json().catch(() => ({}));

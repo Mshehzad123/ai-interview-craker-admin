@@ -21,9 +21,13 @@ export async function PATCH(_req: Request, context: Ctx) {
   }
 
   const { id } = context.params;
+  const headers: Record<string, string> = { Authorization: `Bearer ${secret}` };
+  const audit = process.env.WHISPR_ADMIN_AUDIT_EMAIL?.trim();
+  if (audit) headers["X-Admin-Actor"] = audit;
+
   const res = await fetch(`${base}/api/admin/users/${id}/approve`, {
     method: "PATCH",
-    headers: { Authorization: `Bearer ${secret}` },
+    headers,
   });
   const body = await res.json().catch(() => ({}));
   return NextResponse.json(body, { status: res.status });

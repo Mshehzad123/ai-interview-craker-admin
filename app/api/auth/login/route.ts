@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { SignJWT } from "jose";
 import { COOKIE } from "@/lib/admin-jwt";
+import { verifyAdminPassword } from "@/lib/admin-auth";
 
 const bodySchema = z.object({ password: z.string().min(1) });
 
@@ -12,12 +13,15 @@ function getSecret() {
 }
 
 export async function POST(req: NextRequest) {
-  const adminPass = process.env.ADMIN_PASSWORD?.trim();
   const secret = getSecret();
 
-  if (!adminPass || !secret) {
+  // Support both ADMIN_PASSWORD_HASH (scrypt, preferred) and ADMIN_PASSWORD (legacy plain-text)
+  const storedCredential =
+    process.env.ADMIN_PASSWORD_HASH?.trim() || process.env.ADMIN_PASSWORD?.trim();
+
+  if (!storedCredential || !secret) {
     return NextResponse.json(
-      { error: "Admin is not configured (ADMIN_PASSWORD / ADMIN_JWT_SECRET)." },
+      { error: "Admin is not configured. Set ADMIN_PASSWORD_HASH and ADMIN_JWT_SECRET in .env." },
       { status: 503 }
     );
   }
@@ -28,10 +32,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { timingSafeEqual, createHash } = await import("crypto");
-  const a = createHash("sha256").update(parsed.data.password).digest();
-  const b = createHash("sha256").update(adminPass).digest();
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+  const valid = await verifyAdminPassword(parsed.data.password, storedCredential);
+  if (!valid) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 

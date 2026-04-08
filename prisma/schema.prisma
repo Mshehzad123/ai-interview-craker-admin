@@ -15,6 +15,7 @@ model User {
   image        String?
   credits      Float      @default(0)
   status        String     @default("pending")
+  sessionNonce  Int        @default(0)
   requestedAt   DateTime   @default(now())
   approvedAt    DateTime?
   approvedBy    String?
@@ -31,8 +32,23 @@ model User {
   accounts     Account[]
   magicTokens  MagicToken[]
   auditLogs    AuditLog[]
+  statusHistory StatusHistory[]
 
   @@index([status])
+}
+
+model StatusHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oldStatus String
+  newStatus String
+  changedBy String
+  changedAt DateTime @default(now())
+  note      String?
+
+  @@index([userId])
+  @@index([changedAt])
 }
 
 model AuditLog {

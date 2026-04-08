@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+import { jwtVerify, errors as joseErrors } from "jose";
 
 function getSecret() {
   const s = process.env.ADMIN_JWT_SECRET?.trim();
@@ -22,8 +22,13 @@ export async function middleware(request: NextRequest) {
   try {
     await jwtVerify(token, secret);
     return NextResponse.next();
-  } catch {
-    const res = NextResponse.redirect(new URL("/login", request.url));
+  } catch (err) {
+    const res = NextResponse.redirect(
+      new URL(
+        err instanceof joseErrors.JWTExpired ? "/login?reason=expired" : "/login",
+        request.url
+      )
+    );
     res.cookies.delete("admin_token");
     return res;
   }
