@@ -123,7 +123,7 @@ model InterviewSession {
   jobRole       String?
   industry      String?
   interviewType String?
-  aiModel       String   @default("llama-3.3-70b")
+  aiModel       String   @default("qwen-plus")
   duration      Int      @default(0)
   creditsUsed   Float    @default(0)
   questionsAnswered Int  @default(0)
@@ -188,7 +188,7 @@ model Settings {
   defaultAudioSource    String  @default("microphone")
   defaultTtsVoice       String  @default("default")
   defaultTtsSpeed       Float   @default(1.0)
-  defaultAiModel        String  @default("gpt-4o")
+  defaultAiModel        String  @default("qwen-plus")
   defaultResponseLength String  @default("medium")
   defaultLanguage       String  @default("en")
   theme                 String  @default("dark")

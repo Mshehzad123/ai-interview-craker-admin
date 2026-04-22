@@ -3,28 +3,47 @@
 @tailwind utilities;
 
 :root {
-  --bg-base: #080808;
-  --bg-surface: #0f0f0f;
-  --bg-elevated: #161616;
-  --bg-overlay: #1e1e1e;
-  --border-subtle: #1f1f1f;
-  --border-default: #2a2a2a;
-  --border-strong: #3a3a3a;
-  --accent: #00e5cc;
-  --accent-dim: #00e5cc18;
-  --accent-hover: #00fff0;
-  --accent-muted: #00e5cc60;
-  --amber: #f5a623;
-  --amber-dim: #f5a62315;
-  --success: #22c55e;
-  --success-dim: #22c55e15;
-  --error: #ff4545;
-  --error-dim: #ff454515;
-  --warning: #f5a623;
-  --text-primary: #f0f0f0;
-  --text-secondary: #8a8a8a;
-  --text-tertiary: #4a4a4a;
-  --text-inverse: #080808;
+  --color-primary-50: #eff4ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-500: #1e3a8a;
+  --color-primary-700: #1d3070;
+  --color-primary-900: #0f1b3d;
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f8faff;
+  --color-surface-tertiary: #f0f4ff;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #d4af37;
+  --color-text-primary: #0f1b3d;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-border-light: rgba(30, 58, 138, 0.1);
+  --color-border-default: rgba(30, 58, 138, 0.2);
+  --color-border-strong: rgba(30, 58, 138, 0.35);
+  --gradient-primary: linear-gradient(135deg, #0f1b3d 0%, #1e3a8a 50%, #1d3070 100%);
+  --gradient-gold: linear-gradient(135deg, #d4af37 0%, #fbbf24 50%, #b8960c 100%);
+  --shadow-md: 0 4px 16px rgba(30, 58, 138, 0.12), 0 2px 6px rgba(30, 58, 138, 0.08);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.3);
+  --bg-base: var(--color-surface-secondary);
+  --bg-surface: var(--color-surface-primary);
+  --bg-elevated: var(--color-surface-tertiary);
+  --bg-overlay: var(--color-primary-50);
+  --border-subtle: var(--color-border-light);
+  --border-default: var(--color-border-default);
+  --border-strong: var(--color-border-strong);
+  --accent: var(--color-primary-500);
+  --accent-hover: var(--color-primary-700);
+  --accent-muted: rgba(30, 58, 138, 0.2);
+  --amber: var(--color-gold-500);
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-tertiary: var(--color-text-muted);
+  --text-inverse: #fff;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -35,8 +54,7 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-accent: 0 0 24px rgba(0, 229, 204, 0.15);
+  --shadow-accent: var(--shadow-gold);
 }
 
 body {
@@ -64,36 +82,35 @@ body {
 
 @layer components {
   .btn-primary {
-    background: var(--accent);
-    color: var(--text-inverse);
-    font-weight: 600;
+    background: var(--gradient-gold);
+    color: var(--color-primary-900);
+    font-weight: 700;
     font-size: 14px;
     padding: 10px 20px;
-    border-radius: var(--radius-md);
+    border-radius: 9999px;
     border: none;
     cursor: pointer;
-    transition: all 0.12s ease;
-    box-shadow: 0 0 20px rgba(0, 229, 204, 0.2);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .btn-primary:hover {
-    background: var(--accent-hover);
-    box-shadow: 0 0 30px rgba(0, 229, 204, 0.35);
+    opacity: 0.92;
+    box-shadow: var(--shadow-gold);
   }
 
   .btn-secondary {
     background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-default);
+    color: var(--color-primary-700);
+    border: 1.5px solid var(--border-default);
     font-family: var(--font-body), ui-sans-serif, sans-serif;
     font-weight: 500;
     font-size: 14px;
     padding: 10px 20px;
-    border-radius: var(--radius-md);
+    border-radius: 9999px;
     cursor: pointer;
-    transition: all 0.12s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .btn-secondary:hover {
-    border-color: var(--border-strong);
+    border-color: var(--color-primary-500);
     background: var(--bg-elevated);
   }
 

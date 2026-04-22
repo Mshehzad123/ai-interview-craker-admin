@@ -27,6 +27,20 @@ const config: Config = {
         amber: "var(--amber)",
         success: "var(--success)",
         error: "var(--error)",
+        whispr: {
+          primary: {
+            50: "var(--color-primary-50)",
+            100: "var(--color-primary-100)",
+            500: "var(--color-primary-500)",
+            700: "var(--color-primary-700)",
+            900: "var(--color-primary-900)",
+          },
+          gold: {
+            300: "var(--color-gold-300)",
+            400: "var(--color-gold-400)",
+            500: "var(--color-gold-500)",
+          },
+        },
       },
       fontFamily: {
         sans: ["var(--font-body)", "DM Sans", "ui-sans-serif", "sans-serif"],
