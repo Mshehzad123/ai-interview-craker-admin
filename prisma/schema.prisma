@@ -1,3 +1,10 @@
+// =====================================================================
+// IMPORTANT: This schema MUST stay in sync with the canonical schema at
+//   ../../ai-interview-craker-/prisma/schema.prisma
+// Any model added on the web app must be mirrored here so `prisma generate`
+// produces matching client types. Drift was a top-3 audit finding.
+// =====================================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -33,8 +40,23 @@ model User {
   magicTokens  MagicToken[]
   auditLogs    AuditLog[]
   statusHistory StatusHistory[]
+  desktopAuthTokens DesktopAuthToken[]
+  aiResponseFeedback AIResponseFeedback[]
+  onboardingCompletedAt DateTime?
 
   @@index([status])
+}
+
+model DesktopAuthToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model StatusHistory {
@@ -129,11 +151,28 @@ model InterviewSession {
   questionsAnswered Int  @default(0)
   isFreeSession Boolean  @default(false)
   lastCreditExtensionAt DateTime?
+  documentIds  String[] @default([])
   createdAt     DateTime @default(now())
   endedAt       DateTime?
+  messages      SessionMessage[]
+  feedback      AIResponseFeedback[]
 
   @@index([userId])
   @@index([createdAt])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, endedAt])
+}
+
+model SessionMessage {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role        String
+  content     String   @db.Text
+  timestamp   DateTime @default(now())
+  metadata    Json?
+
+  @@index([sessionId, timestamp])
 }
 
 model Document {
@@ -167,6 +206,8 @@ model Purchase {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model Referral {
@@ -185,7 +226,7 @@ model Settings {
   id                    String  @id @default(cuid())
   userId                String  @unique
   user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  defaultAudioSource    String  @default("microphone")
+  defaultAudioSource    String  @default("system")
   defaultTtsVoice       String  @default("default")
   defaultTtsSpeed       Float   @default(1.0)
   defaultAiModel        String  @default("qwen-plus")
@@ -195,4 +236,43 @@ model Settings {
   emailNotifications    Boolean @default(true)
   sessionSummaryEmail   Boolean @default(false)
   customShortcuts       Json?
+}
+
+model AIResponseFeedback {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  responseId  String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@unique([sessionId, responseId])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([rating, createdAt(sort: Desc)])
+}
+
+model DesktopAuthState {
+  id          String   @id @default(cuid())
+  state       String   @unique
+  challenge   String
+  used        Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model SessionLifecycle {
+  id              String   @id @default(cuid())
+  sessionId       String   @unique
+  hardStopAt      DateTime
+  tokensConsumed  Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([hardStopAt])
 }

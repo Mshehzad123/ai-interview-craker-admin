@@ -24,33 +24,27 @@ export async function hashAdminPassword(password: string): Promise<string> {
 }
 
 /**
- * Verifies a password against a stored hash.
- * Accepts two formats:
- *  - scrypt  → "salt:derivedHex"  (preferred, set in ADMIN_PASSWORD_HASH)
- *  - legacy  → plain text         (from ADMIN_PASSWORD — deprecated)
+ * Verifies a password against a stored scrypt hash of the form `salt:derivedHex`.
+ *
+ * Plain-text fallback was REMOVED. Operators must run
+ * `node scripts/hash-password.mjs "<password>"` and store the output in
+ * `ADMIN_PASSWORD_HASH`. A malformed hash (no `:` or wrong length) is rejected.
  */
 export async function verifyAdminPassword(
   password: string,
   stored: string
 ): Promise<boolean> {
   const [salt, storedHex] = stored.split(":");
-
-  // Plain-text comparison path for legacy ADMIN_PASSWORD env var.
-  // Warn and allow, but guide operators to upgrade.
-  if (!storedHex) {
-    if (process.env.NODE_ENV === "production") {
-      console.warn(
-        "[admin-auth] ADMIN_PASSWORD is plain text. " +
-          "Generate a scrypt hash and store it in ADMIN_PASSWORD_HASH to remove this warning."
+  if (!salt || !storedHex || storedHex.length !== KEYLEN * 2) {
+    if (process.env.NODE_ENV !== "test") {
+      console.error(
+        "[admin-auth] ADMIN_PASSWORD_HASH is malformed. Expected format: '<salt-hex>:<derived-hex>'. " +
+          "Run `node scripts/hash-password.mjs \"<password>\"` to generate a valid value."
       );
     }
-    const a = Buffer.from(password);
-    const b = Buffer.from(stored);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
+    return false;
   }
 
-  // scrypt verification
   try {
     const derived = (await scryptAsync(password, salt, KEYLEN)) as Buffer;
     const storedBuf = Buffer.from(storedHex, "hex");

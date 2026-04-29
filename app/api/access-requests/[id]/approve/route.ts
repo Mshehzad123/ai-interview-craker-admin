@@ -9,25 +9,21 @@ export async function PATCH(_req: Request, context: Ctx) {
   }
 
   const base = process.env.WHISPR_APP_URL?.trim()?.replace(/\/$/, "");
-  const secret = process.env.WHISPR_ADMIN_SERVICE_SECRET?.trim();
+  const secret = process.env.INTERNAL_ADMIN_SHARED_SECRET?.trim();
   if (!base || !secret) {
     return NextResponse.json(
       {
         error:
-          "Missing WHISPR_APP_URL or WHISPR_ADMIN_SERVICE_SECRET. Copy both from env.example — the secret must match WHISPR_ADMIN_SERVICE_SECRET in the Whispr app .env.",
+          "Missing WHISPR_APP_URL or INTERNAL_ADMIN_SHARED_SECRET. Copy both from env.example.",
       },
       { status: 503 }
     );
   }
 
   const { id } = context.params;
-  const headers: Record<string, string> = { Authorization: `Bearer ${secret}` };
-  const audit = process.env.WHISPR_ADMIN_AUDIT_EMAIL?.trim();
-  if (audit) headers["X-Admin-Actor"] = audit;
-
-  const res = await fetch(`${base}/api/admin/users/${id}/approve`, {
+  const res = await fetch(`${base}/api/internal/admin/users/${id}/approve`, {
     method: "PATCH",
-    headers,
+    headers: { "x-whispr-internal-secret": secret },
   });
   const body = await res.json().catch(() => ({}));
   return NextResponse.json(body, { status: res.status });
